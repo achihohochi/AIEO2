@@ -3,7 +3,7 @@
      height="auto"/>
 </p>
 
-## <h1 align="center" id="heading">Session 3: Back End Web App Development & Deployment of LLM Applications</h1>
+## <h1 align="center" id="heading">Session 2: ⚡ LLM APIs & Backend Web App Development & Deployment</h1>
 
 | 🤓 Pre-class | ⏺️ Recording     | 🖼️ Slides        | 👨‍💻 Repo         | 📝 Homework      | 📁 Feedback       |
 |:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|
