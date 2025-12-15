@@ -7,7 +7,7 @@
 
 | 🤓 Pre-work | ⏺️ Recording     | 🖼️ Slides        | 👨‍💻 Repo         | 📝 Homework      | 📁 Feedback       |
 |:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|:-----------------|
-| Coming soon! | [Recording!](https://us02web.zoom.us/rec/share/PtbREKVgUt3H0B2C46MyOaViNICb0IKl9IeEQCFt7KyK8kiKH8sYbtrpEwePXXIy.hCKQNvrnHUHercUI) (Shu4=fHy) | [Slides](https://www.canva.com/design/DAG5nmUrmgE/COB2qw0hmv-UHk_7CuWTHA/edit?utm_content=DAG5nmUrmgE&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) | [Repo](https://github.com/AI-Maker-Space/AIEO1/tree/main/Session_04_End_to_End_LLM_Application_Development_with_Coding_Agents) | [HW #4](https://forms.gle/KCqQ1c2zCBeWPsAt8) | [Maven feedback](https://maven.com/aimakerspace/ai-eng-onramp/1/home#197f79) |
+| Coming soon! | Coming soon! | Coming soon! | Coming soon! | Coming soon! | Coming soon! |
 
 ---
 
