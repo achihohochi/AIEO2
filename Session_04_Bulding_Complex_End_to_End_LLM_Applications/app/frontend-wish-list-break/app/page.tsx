@@ -19,8 +19,6 @@ interface ChatMessage {
 
 export default function WishListApp() {
   const [wishes, setWishes] = useState<Wish[]>([])
-  const [currentWish, setCurrentWish] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState("")
@@ -32,7 +30,7 @@ export default function WishListApp() {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isImageUploading, setIsImageUploading] = useState(false)
   const [santaResponse, setSantaResponse] = useState<string | null>(null)
-  const [imageQuestion, setImageQuestion] = useState("")
+  const [evaluation, setEvaluation] = useState<{ happy_holiday_score: number; feedback: string } | null>(null)
 
   // Generate snowflake configurations only on client to avoid hydration errors
   const snowflakes = useMemo(() => {
@@ -53,56 +51,6 @@ export default function WishListApp() {
   useEffect(() => {
     setIsMounted(true)
   }, [])
-
-  const addWish = async () => {
-    if (!currentWish.trim()) return
-
-    setIsLoading(true)
-
-    try {
-      // Call Santa endpoint to get verdict
-      const response = await fetch("/api/chat/single", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: currentWish.trim(), character: "nicholas" }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to get Santa's verdict")
-      }
-
-      const data = await response.json()
-
-      // Determine verdict based on Santa's response
-      const verdict: "NICE" | "NAUGHTY" =
-        data.reply.toLowerCase().includes("nice") ||
-        data.reply.toLowerCase().includes("dobr") ||
-        data.reply.toLowerCase().includes("good")
-          ? "NICE"
-          : "NAUGHTY"
-
-      const newWish: Wish = {
-        id: Date.now().toString(),
-        text: currentWish.trim(),
-        verdict,
-      }
-
-      setWishes((prev) => [...prev, newWish])
-      setCurrentWish("")
-    } catch (error) {
-      console.error("Error adding wish:", error)
-      // Fallback: random verdict if backend fails
-      const newWish: Wish = {
-        id: Date.now().toString(),
-        text: currentWish.trim(),
-        verdict: Math.random() > 0.5 ? "NICE" : "NAUGHTY",
-      }
-      setWishes((prev) => [...prev, newWish])
-      setCurrentWish("")
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const sendChatMessage = async () => {
     if (!chatInput.trim() || isChatLoading) return
@@ -169,6 +117,7 @@ export default function WishListApp() {
       }
       reader.readAsDataURL(file)
       setSantaResponse(null)
+      setEvaluation(null)
     }
   }
 
@@ -177,13 +126,11 @@ export default function WishListApp() {
 
     setIsImageUploading(true)
     setSantaResponse(null)
+    setEvaluation(null)
 
     try {
       const formData = new FormData()
       formData.append("image", selectedImage)
-      if (imageQuestion.trim()) {
-        formData.append("question", imageQuestion.trim())
-      }
 
       const response = await fetch("/api/scan-relative", {
         method: "POST",
@@ -206,6 +153,9 @@ export default function WishListApp() {
 
       const data = await response.json()
       setSantaResponse(data.santa_message)
+      if (data.evaluation) {
+        setEvaluation(data.evaluation)
+      }
     } catch (error) {
       console.error("Error uploading image:", error)
       setSantaResponse("Ho ho ho! I'm having trouble seeing that image right now. Please try again!")
@@ -218,7 +168,7 @@ export default function WishListApp() {
     setSelectedImage(null)
     setImagePreview(null)
     setSantaResponse(null)
-    setImageQuestion("")
+    setEvaluation(null)
     // Reset file input
     const fileInput = document.getElementById("image-upload-input") as HTMLInputElement
     if (fileInput) {
@@ -313,14 +263,6 @@ export default function WishListApp() {
                 </div>
 
                 <div className="max-w-md mx-auto">
-                  <Input
-                    value={imageQuestion}
-                    onChange={(e) => setImageQuestion(e.target.value)}
-                    placeholder="Optional: Ask Santa a question about the photo..."
-                    className="w-full border-2 border-[#8b6f47] bg-white text-[#3d2614] placeholder:text-[#9a7b5f] h-12 text-base rounded-lg mb-4"
-                    disabled={isImageUploading}
-                  />
-
                   <Button
                     onClick={handleImageUpload}
                     disabled={isImageUploading}
@@ -341,12 +283,28 @@ export default function WishListApp() {
                 </div>
 
                 {santaResponse && (
-                  <div className="max-w-md mx-auto mt-6 bg-white border-4 border-[#c9a961] rounded-xl p-6 shadow-lg">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-3xl">🎅</span>
-                      <h3 className="font-bold text-xl text-[#7a2c2c]">Santa's Response</h3>
+                  <div className="max-w-md mx-auto mt-6 space-y-4">
+                    <div className="bg-white border-4 border-[#c9a961] rounded-xl p-6 shadow-lg">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-3xl">🎅</span>
+                        <h3 className="font-bold text-xl text-[#7a2c2c]">Santa's Response</h3>
+                      </div>
+                      <p className="text-[#3d2614] leading-relaxed whitespace-pre-wrap">{santaResponse}</p>
                     </div>
-                    <p className="text-[#3d2614] leading-relaxed whitespace-pre-wrap">{santaResponse}</p>
+
+                    {evaluation && (
+                      <div className="bg-gradient-to-r from-green-50 to-amber-50 border-4 border-green-400 rounded-xl p-6 shadow-lg">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-3xl">⭐</span>
+                          <h3 className="font-bold text-xl text-[#7a2c2c]">Happy Holiday Score</h3>
+                        </div>
+                        <div className="flex items-center gap-4 mb-3">
+                          <div className="text-5xl font-bold text-green-600">{evaluation.happy_holiday_score}</div>
+                          <div className="text-2xl text-amber-600">/100</div>
+                        </div>
+                        <p className="text-[#3d2614] text-sm italic leading-relaxed">{evaluation.feedback}</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -384,24 +342,6 @@ export default function WishListApp() {
           )}
 
           <div className="space-y-4">
-            <div className="flex gap-3">
-              <Input
-                value={currentWish}
-                onChange={(e) => setCurrentWish(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !isLoading && addWish()}
-                placeholder="Type your Christmas wish here..."
-                className="flex-1 border-3 border-[#8b6f47] bg-white text-[#3d2614] placeholder:text-[#9a7b5f] h-14 text-base rounded-lg shadow-md"
-                disabled={isLoading}
-              />
-              <Button
-                onClick={addWish}
-                disabled={isLoading || !currentWish.trim()}
-                className="h-14 w-14 bg-[#7a2c2c] hover:bg-[#5c1f1f] text-white rounded-full shadow-lg disabled:opacity-50 flex items-center justify-center"
-              >
-                {isLoading ? <div className="animate-spin text-xl">⚖️</div> : <span className="text-xl">⊕</span>}
-              </Button>
-            </div>
-
             <div className="bg-white border-3 border-[#8b6f47] rounded-xl shadow-inner overflow-hidden">
               <div className="bg-[#7a2c2c] text-white px-4 py-3 flex items-center gap-2">
                 <span className="text-2xl">🎅</span>

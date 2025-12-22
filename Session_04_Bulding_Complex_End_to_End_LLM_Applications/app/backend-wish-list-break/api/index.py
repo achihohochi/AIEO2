@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from openai import OpenAI
 import os
 import base64
+import json
 from dotenv import load_dotenv
 
 ## break vercel deployment
@@ -37,6 +38,11 @@ class ChatRequest(BaseModel):
     message: str
 
 
+class EvaluateRequest(BaseModel):
+    user_input: str
+    response: str
+
+
 # -----------------------------
 # Constants
 # -----------------------------
@@ -60,7 +66,15 @@ You look at the photo and imagine:
 - Santa’s advice (1–2 kind, funny suggestions)
 
 Always sound kind, festive, and encouraging.
-Occasionally use “Ho ho ho!”.
+Occasionally use "Ho ho ho!".
+"""
+
+JUDGE_SYSTEM_PROMPT = """
+You are a Christmas Spirit Judge. Rate how festive and holiday-appropriate a Santa/St. Nicholas response is.
+
+Give a score from 0-100 and one sentence of feedback.
+
+Return JSON: {"happy_holiday_score": <0-100>, "feedback": "<one sentence>"}
 """
 
 # -----------------------------
@@ -160,3 +174,66 @@ async def scan_relative(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Vision error: {str(e)}")
+
+
+# -------- Evaluation Endpoint (LLM as Judge) --------
+
+@app.post("/api/evaluate-response")
+def evaluate_response(request: EvaluateRequest):
+    """Evaluates a response using an LLM judge. Returns Happy Holiday Score (0-100)."""
+    if not os.getenv("OPENAI_API_KEY"):
+        raise HTTPException(status_code=500, detail="OPENAI_API_KEY not configured")
+
+    try:
+        # Ask judge LLM to evaluate
+        judge_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": JUDGE_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": f'User: "{request.user_input}"\nResponse: "{request.response}"\nRate this response.'
+                }
+            ],
+            temperature=0.3,
+            response_format={"type": "json_object"}
+        )
+
+        # Parse and return
+        eval_data = json.loads(judge_response.choices[0].message.content)
+        return {
+            "happy_holiday_score": eval_data.get("happy_holiday_score", 50),
+            "feedback": eval_data.get("feedback", "Evaluation completed.")
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Vercel never runs servers, so we need to use uvicorn to run the server
+# Why?
+
+# Uvicorn tries to:
+# Open a port
+# Listen for traffic
+# Stay alive forever
+
+# Vercel says:
+# “No. I already handle traffic and ports. Vercel charges you for every request.”
+
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run(app)
+
+# Vercel cannot use a background async task that runs independently of the current request.
+# for submit request return status ok and 10s later print done
+# import asyncio
+
+# async def log_event():
+#     await asyncio.sleep(10)
+#     print("done")
+
+# @app.post("/submit")
+# async def submit():
+#     asyncio.create_task(log_event())
+#     return {"status": "ok"}

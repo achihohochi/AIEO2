@@ -60,8 +60,33 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
+    const santaMessage = data.santa_message
+    const userQuestion = (question as string) || "Santa, what do you think?"
 
-    return NextResponse.json({ santa_message: data.santa_message })
+    // Call evaluation endpoint
+    let evaluation = null
+    try {
+      const evalResponse = await fetch(`${backendBaseUrl.replace(/\/$/, "")}/api/evaluate-response`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_input: userQuestion,
+          response: santaMessage,
+        }),
+      })
+
+      if (evalResponse.ok) {
+        evaluation = await evalResponse.json()
+      }
+    } catch (evalError) {
+      console.error("[v0] Evaluation error (non-fatal):", evalError)
+      // Continue without evaluation if it fails
+    }
+
+    return NextResponse.json({
+      santa_message: santaMessage,
+      evaluation: evaluation,
+    })
   } catch (error) {
     console.error("[v0] Error in scan-relative API route:", error)
     return NextResponse.json(

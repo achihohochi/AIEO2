@@ -3,11 +3,22 @@
      height="auto"/>
 </p>
 
-## <h1 align="center" id="heading">Session 4: Building End-to-End LLM Applications</h1>
+## <h1 align="center" id="heading">Session 4: Building Complex End-to-End LLM Applications</h1>
 
 | 🤓 Pre-work | ⏺️ Recording     | 🖼️ Slides        | 👨‍💻 Repo         |
 |:-----------------|:-----------------|:-----------------|:-----------------|
 | Coming soon! | Coming soon! | Coming soon! | Coming soon! |
+
+---
+
+## Application deployment check list
+
+1. create backend first using jupyter notebook or just testing a simple app.py script and  check your backend runs locally
+2. create frontend, when creating v0 make sure to indicate that the frontend will connect to backend via env.local
+3. replace in env.local NEXT_PUBLIC_BACKEND_URL with the http://localhost:8000, test frontend runs locally
+4. deploy backend to vercel or render, and add environment variable OPENAI_API_KEY= your-openai-api-key
+5. replace in your local frontend in .env.local NEXT_PUBLIC_BACKEND_URL=your-vercel-url (or your-render-url) and test frontend locally
+6. deploy also frontend to vercel and add environment variable with NEXT_PUBLIC_BACKEND_URL=your-vercel-url (or your-render-url)
 
 ---
 
@@ -17,9 +28,10 @@
 - Python 3.10+
 - Cursor IDE
 - GitHub account
-- Vercel account
+- Vercel account (for frontend deployment)
+- Render account (optional, for backend deployment alternative)
 - uv (Python package manager)
-- OPENAI_API_KEY (set as an environment variable in Vercel)
+- OPENAI_API_KEY (set as an environment variable in Vercel or Render)
 - Optional: Vercel CLI (only if deploying from terminal):
   ```bash
   npm install -g vercel
@@ -39,7 +51,7 @@ In today's code, we also use several tools and frameworks:
 <details>
 <summary><strong>🏗️ Build</strong></summary>
 
-In this final session, you'll work with an advanced end-to-end LLM application that demonstrates real-world deployment challenges. You'll learn how to deploy both frontend and backend components to Vercel, test the deployment, and understand what can break in production environments.
+In this final session, you'll work with an advanced end-to-end LLM application that demonstrates real-world deployment challenges. You'll learn how to deploy both frontend and backend components to Vercel (or Render for backend), test the deployment, and understand what can break in production environments.
 
 This is a hands-on session focused on deployment and troubleshooting - no assignments, just practical experience with shipping applications to production!
 
@@ -55,6 +67,8 @@ The application is deployed and available for testing:
 - **Frontend**: [https://frontend-wish-list-break.vercel.app](https://frontend-wish-list-break.vercel.app)
 - **Backend**: [https://backend-wish-list-break.vercel.app](https://backend-wish-list-break.vercel.app)
 - **Backend API Documentation**: [https://backend-wish-list-break.vercel.app/docs](https://backend-wish-list-break.vercel.app/docs)
+- **Backend (Render)**: [https://backend-wish-list-render.onrender.com](https://backend-wish-list-render.onrender.com) - Link to Vercel deployment connected to GitHub repository: [https://github.com/katgaw/backend-wish-list-render](https://github.com/katgaw/backend-wish-list-render)
+
 
 You can test the complete application at the frontend URL, or explore the backend API directly using the API documentation link.
 
@@ -68,6 +82,7 @@ You can test the complete application at the frontend URL, or explore the backen
 - [Step 1: Set Up the Application](#step-1-set-up-the-application)
 - [Step 2: Test Backend Locally](#step-2-test-backend-locally)
 - [Step 3: Deploy Backend to Vercel](#step-3-deploy-backend-to-vercel)
+- [Step 3 Alternative: Deploy Backend to Render](#step-3-alternative-deploy-backend-to-render)
 - [Step 4: Test Frontend Locally](#step-4-test-frontend-locally)
 - [Step 5: Deploy Frontend to Vercel](#step-5-deploy-frontend-to-vercel)
 - [Step 6: Connect Frontend to Backend](#step-6-connect-frontend-to-backend)
@@ -94,7 +109,7 @@ In this session, you'll work with a complete end-to-end LLM application that inc
    - Christmas-themed UI
 
 You'll learn to:
-- Deploy FastAPI backends to Vercel
+- Deploy FastAPI backends to Vercel or Render
 - Deploy Next.js frontends to Vercel
 - Configure environment variables
 - Connect frontend to backend
@@ -246,6 +261,105 @@ Save your backend URL - you'll need it for the frontend!
 
 ---
 
+# Step 3 Alternative: Deploy Backend to Render
+
+<details>
+<summary><strong>3A.1 Push Backend to GitHub</strong></summary>
+
+Before deploying to Render, make sure your backend code is pushed to a GitHub repository:
+
+1. Create a new repository on GitHub:
+   - Go to [https://github.com/new](https://github.com/new)
+   - Enter a repository name (e.g., `backend-wish-list-break`)
+   - Choose public or private
+   - Click **"Create repository"**
+
+2. Clone the repository locally using SSH:
+   ```bash
+   git clone git@github.com:YOUR_USERNAME/YOUR_REPO_NAME.git
+   cd YOUR_REPO_NAME
+   ```
+
+3. Copy the backend app files to the cloned repository:
+   ```bash
+   cp -r ../app/backend-wish-list-break/* .
+   ```
+
+4. Add and commit your code:
+   ```bash
+   git add .
+   git commit -m 'adding files'
+   ```
+
+5. Push to GitHub:
+   ```bash
+   git push origin main
+   ```
+
+</details>
+
+<details>
+<summary><strong>3A.2 Create Web Service on Render</strong></summary>
+
+1. Go to [https://dashboard.render.com/](https://dashboard.render.com/)
+2. Click **"New +"** → **"Web Service"**
+3. Under **"Connect account"**, select **"GitHub"** (or connect your GitHub account if not already connected)
+4. Click **"Configure account"** and authorize Render to access your GitHub repositories
+5. Select the repository containing your backend code
+6. Click **"Connect"**
+
+</details>
+
+<details>
+<summary><strong>3A.3 Configure Web Service Settings</strong></summary>
+
+Configure your web service with the following settings:
+
+- **Name**: Choose a name for your service (e.g., `backend-wish-list-break`)
+- **Region**: Select the region closest to you
+- **Branch**: Select `main` (or your default branch)
+- **Root Directory**: Leave empty or set to the path if your backend is in a subdirectory
+- **Runtime**: Select `Python 3`
+- **Build Command**: Leave empty (Render will auto-detect)
+- **Start Command**: 
+  ```
+  uvicorn api.index:app --host 0.0.0.0 --port $PORT
+  ```
+- **Plan**: Select **"Free"** (or choose a paid plan if you prefer)
+
+</details>
+
+<details>
+<summary><strong>3A.4 Add Environment Variables</strong></summary>
+
+1. Scroll down to the **"Environment Variables"** section
+2. Click **"Add Environment Variable"**
+3. Add the following:
+   - **Key**: `OPENAI_API_KEY`
+   - **Value**: Your OpenAI API key (e.g., `sk-your-actual-api-key-here`)
+4. Click **"Create Web Service"**
+
+Render will automatically start building and deploying your backend.
+
+</details>
+
+<details>
+<summary><strong>3A.5 Verify Backend Deployment on Render</strong></summary>
+
+Once deployment is complete:
+
+1. Render will provide you with a URL (e.g., `https://your-service-name.onrender.com`)
+2. Visit your backend URL:
+   - **Health check**: `https://YOUR_SERVICE_NAME.onrender.com/`
+   - **API documentation**: `https://YOUR_SERVICE_NAME.onrender.com/docs`
+3. Save your Render backend URL - you'll need it for the frontend!
+
+**Note**: Free tier services on Render may spin down after inactivity. The first request after inactivity may take longer to respond.
+
+</details>
+
+---
+
 # Step 4: Test Frontend Locally
 
 <details>
@@ -314,12 +428,18 @@ Before deploying, you'll need to set the backend URL in Vercel. You can do this 
 
 **Option 1: Set in Vercel Dashboard (Recommended)**
 - After deployment, go to Vercel Dashboard → Your Frontend Project → Settings → Environment Variables
-- Add `NEXT_PUBLIC_BACKEND_URL` with your deployed backend URL (e.g., `https://your-backend.vercel.app`)
+- Add `NEXT_PUBLIC_BACKEND_URL` with your deployed backend URL:
+  - If using Vercel backend: `https://your-backend.vercel.app`
+  - If using Render backend: `https://your-service-name.onrender.com`
 
 **Option 2: Update .env.local before deployment**
 ```bash
 # Update .env.local to use your deployed backend
+# For Vercel backend:
 echo "NEXT_PUBLIC_BACKEND_URL=https://YOUR_BACKEND_URL.vercel.app" > .env.local
+
+# OR for Render backend:
+echo "NEXT_PUBLIC_BACKEND_URL=https://YOUR_SERVICE_NAME.onrender.com" > .env.local
 ```
 
 </details>
@@ -350,7 +470,9 @@ After deployment:
 1. Go to your Vercel Dashboard
 2. Select your frontend project
 3. Go to **Settings** → **Environment Variables**
-4. Add `NEXT_PUBLIC_BACKEND_URL` with your deployed backend URL
+4. Add `NEXT_PUBLIC_BACKEND_URL` with your deployed backend URL:
+   - If using Vercel backend: `https://your-backend.vercel.app`
+   - If using Render backend: `https://your-service-name.onrender.com`
 5. Make sure it's set for **Production**, **Preview**, and **Development** environments
 6. Redeploy if necessary (Vercel will automatically redeploy when you add environment variables)
 
@@ -381,26 +503,9 @@ Make sure your frontend is configured to use your deployed backend:
 
 </details>
 
-<details>
-<summary><strong>6.2 Verify Backend CORS Configuration</strong></summary>
-
-Check that your backend allows requests from your frontend:
-
-1. Open `app/backend-wish-list-break/api/index.py`
-2. Verify CORS middleware is configured:
-   ```python
-   app.add_middleware(
-       CORSMiddleware,
-       allow_origins=["*"],  # Or specify your frontend URL
-       allow_methods=["*"],
-       allow_headers=["*"],
-   )
-   ```
-
-</details>
 
 <details>
-<summary><strong>6.3 Test the Connection</strong></summary>
+<summary><strong>6.2 Test the Connection</strong></summary>
 
 1. Visit your deployed frontend URL
 2. Try sending a chat message
@@ -593,6 +698,60 @@ If you're stuck:
 - Check Vercel function logs for backend errors
 - Verify each step was completed correctly by reviewing the instructions
 - Test locally before deploying to catch issues early
+
+</details>
+
+---
+
+<details>
+<summary><strong>📈 Scaling Your Application</strong></summary>
+
+As your application grows, you'll need to consider different deployment strategies based on your requirements. Here's a guide to scaling from POC to production:
+
+### POC Level (Proof of Concept)
+**Sufficient for:** Learning, demos, and initial testing
+
+- **Vercel** is great for getting started quickly
+- If Vercel breaks or you need more complex features:
+  - You may need more complicated libraries
+  - You may need to run async functions
+  - You may need dedicated servers
+  - **Use Render** as an alternative for more flexibility
+
+### MVP Level (Minimum Viable Product)
+**Sufficient for:** Early customers, beta testing, and small-scale production
+
+- **Render** is good all the way to MVP level
+- **Privacy requirements**: If your client requires privacy compliance:
+  - Use **Azure endpoints** for secure, compliant deployments
+- **Database needs**: When you need to start building a database:
+  - Deploy to **Azure** or **AWS** for managed database services
+- **Fine-tuned models**: When you need custom models:
+  - Save fine-tuned models to **Azure**
+- **Embedding models**: For custom embeddings:
+  - Save fine-tuned embedding models to **Hugging Face (HF)**
+
+### Production Level
+**Required for:** Enterprise clients, high-traffic applications, and mission-critical systems
+
+- Deploy the entire application to your **client-chosen cloud provider**:
+  - **Azure** - Good for enterprise clients, Microsoft ecosystem integration
+  - **AWS** - Industry standard, extensive services, global infrastructure
+- Consider:
+  - Load balancing
+  - Auto-scaling
+  - Database replication
+  - CDN for static assets
+  - Monitoring and logging
+  - Security compliance (SOC 2, HIPAA, etc.)
+  - Disaster recovery and backup strategies
+
+### Key Takeaways
+
+- **Start simple**: Use Vercel or Render for POC/MVP
+- **Scale when needed**: Move to Azure/AWS when you hit limitations or client requirements
+- **Plan ahead**: Consider your client's requirements early (privacy, compliance, scale)
+- **Cost optimization**: Free tiers are great for learning, but production requires proper infrastructure investment
 
 </details>
 
